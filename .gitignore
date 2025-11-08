@@ -1,0 +1,10 @@
+node_modules/
+*.csv
+*.html
+*.png
+.env
+package-lock.json
+
+# Output files
+company-slugs.json
+page-debug.json
