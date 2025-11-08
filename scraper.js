@@ -5,13 +5,20 @@ const DASHBOARD_URL = 'https://my.greenhouse.io/dashboard';
 const OUTPUT_JSON = 'company-slugs.json';
 const OUTPUT_CSV = 'company-slugs.csv';
 
+// Support environment variables for configuration
+const HEADLESS_MODE = process.env.HEADLESS === 'true';
+const TEST_MODE = process.env.TEST_MODE === 'true';
+const TEST_URL = process.env.TEST_URL || DASHBOARD_URL;
+
 async function scrapeGreenhouseCompanies() {
   console.log('Starting Greenhouse company scraper...');
+  console.log(`Mode: ${HEADLESS_MODE ? 'headless' : 'headful'}`);
+  if (TEST_MODE) console.log('TEST MODE: Will not wait for manual login');
 
-  // Launch browser in headful mode for manual login
+  // Launch browser
   const browser = await chromium.launch({
-    headless: false,
-    slowMo: 100
+    headless: HEADLESS_MODE,
+    slowMo: HEADLESS_MODE ? 0 : 100
   });
 
   const context = await browser.newContext({
@@ -21,20 +28,25 @@ async function scrapeGreenhouseCompanies() {
   const page = await context.newPage();
 
   try {
-    console.log(`Navigating to ${DASHBOARD_URL}...`);
-    await page.goto(DASHBOARD_URL, { waitUntil: 'networkidle' });
+    console.log(`Navigating to ${TEST_URL}...`);
+    await page.goto(TEST_URL, { waitUntil: 'networkidle', timeout: 30000 });
 
-    console.log('\n==========================================');
-    console.log('PLEASE LOG IN MANUALLY');
-    console.log('==========================================');
-    console.log('Once you are logged in and can see the dashboard,');
-    console.log('press ENTER in this terminal to continue...\n');
+    if (!TEST_MODE) {
+      console.log('\n==========================================');
+      console.log('PLEASE LOG IN MANUALLY');
+      console.log('==========================================');
+      console.log('Once you are logged in and can see the dashboard,');
+      console.log('press ENTER in this terminal to continue...\n');
 
-    // Wait for user to press Enter
-    await waitForEnter();
+      // Wait for user to press Enter
+      await waitForEnter();
 
-    console.log('Waiting for page to load...');
-    await page.waitForTimeout(2000);
+      console.log('Waiting for page to load...');
+      await page.waitForTimeout(2000);
+    } else {
+      console.log('Test mode: Skipping manual login wait');
+      await page.waitForTimeout(1000);
+    }
 
     console.log('Analyzing page structure...');
 
@@ -78,11 +90,17 @@ async function scrapeGreenhouseCompanies() {
 
   } catch (error) {
     console.error('Error during scraping:', error);
-    await page.screenshot({ path: 'error-screenshot.png' });
-    console.log('Saved error screenshot to error-screenshot.png');
+    try {
+      await page.screenshot({ path: 'error-screenshot.png' });
+      console.log('Saved error screenshot to error-screenshot.png');
+    } catch (screenshotError) {
+      console.error('Could not save screenshot:', screenshotError.message);
+    }
   } finally {
-    console.log('\nPress ENTER to close the browser...');
-    await waitForEnter();
+    if (!TEST_MODE && !HEADLESS_MODE) {
+      console.log('\nPress ENTER to close the browser...');
+      await waitForEnter();
+    }
     await browser.close();
   }
 }

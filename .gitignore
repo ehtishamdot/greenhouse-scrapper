@@ -8,3 +8,10 @@ package-lock.json
 # Output files
 company-slugs.json
 page-debug.json
+
+# Test output files
+test-output.json
+test-output.csv
+test-syntax-output.json
+test-syntax-output.csv
+test-screenshot.png

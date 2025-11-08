@@ -27,7 +27,19 @@ npm install
 npm run install-browsers
 ```
 
+## Testing
+
+Before running the scraper, you can verify everything is working correctly:
+
+```bash
+npm test
+```
+
+This will run syntax checks and validate all core functions without requiring a browser or network connection.
+
 ## Usage
+
+### Basic Usage
 
 1. Run the scraper:
 ```bash
@@ -45,6 +57,24 @@ npm run scrape
 6. Results will be saved to:
    - `company-slugs.json` - JSON format with detailed information
    - `company-slugs.csv` - CSV format for easy import into spreadsheets
+
+### Advanced Usage with Environment Variables
+
+You can customize the scraper behavior with environment variables:
+
+```bash
+# Run in headless mode (no visible browser window)
+HEADLESS=true npm run scrape
+
+# Run in test mode (skip manual login wait)
+TEST_MODE=true npm run scrape
+
+# Use a custom URL instead of the default dashboard
+TEST_URL=https://example.com npm run scrape
+
+# Combine multiple options
+HEADLESS=true TEST_MODE=true npm run scrape
+```
 
 ## Output Format
 
